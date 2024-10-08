@@ -1,3 +1,4 @@
+ ![snake gif](https://github.com/dimasdaffa/dimasdaffa/blob/output/github-contribution-grid-snake.gif)
 ## Hi there 👋
 
 <!--
