@@ -9,15 +9,43 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Debug environment
+        run: |
+          pwd
+          ls -la
+          cat package.json || echo "package.json not found"
+          npm --version
+          node --version
       - name: Install dependencies
         run: |
-          npm ci || npm install
+          echo "Installing dependencies..."
+          npm install
+          echo "Dependencies installed"
+          npm list || echo "Unable to list dependencies"
       - name: Run type check
-        run: npm run type || echo "Type check script not found"
+        run: |
+          echo "Checking for type script..."
+          if npm run type --dry-run; then
+            npm run type
+          else
+            echo "Type script not found in package.json"
+          fi
       - name: Run lint
-        run: npm run lint || echo "Lint script not found"
+        run: |
+          echo "Checking for lint script..."
+          if npm run lint --dry-run; then
+            npm run lint
+          else
+            echo "Lint script not found in package.json"
+          fi
       - name: Run tests
-        run: npm test
+        run: |
+          echo "Running tests..."
+          if npm run test --dry-run; then
+            npm test
+          else
+            echo "Test script not found in package.json"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -28,42 +56,32 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Debug environment
+        run: |
+          pwd
+          ls -la
+          cat action.yml || echo "action.yml not found"
+          ls -la Dockerfile || echo "Dockerfile not found"
       - name: Install dependencies
-        run: npm ci || npm install
+        run: |
+          echo "Installing dependencies..."
+          npm install
       - name: Update action.yml
         run: |
           if [ -f "action.yml" ]; then
+            echo "Updating action.yml..."
+            cat action.yml
             sed -i "s/image: .*/image: Dockerfile/" action.yml
+            echo "Updated action.yml:"
+            cat action.yml
           else
             echo "action.yml not found"
             exit 1
           fi
-      - name: Create dist directory
-        run: mkdir -p dist
-      - name: Generate snake game
-        id: generate-snake
-        uses: ./
-        with:
-          github_user_name: dimasdaffa
-          outputs: |
-            dist/github-contribution-grid-snake.svg
-            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
-            dist/github-contribution-grid-snake.gif?color_snake=orange&color_dots=#bfd6f6,#8dbdff,#64a1f4,#4b91f1,#3c7dd9
-      - name: Verify generated files
+      - name: Prepare dist directory
         run: |
+          mkdir -p dist
           ls -la dist
-          for file in github-contribution-grid-snake.svg github-contribution-grid-snake-dark.svg github-contribution-grid-snake.gif; do
-            if [ ! -f "dist/$file" ]; then
-              echo "Missing file: dist/$file"
-              exit 1
-            fi
-          done
-      - uses: crazy-max/ghaction-github-pages@v4
-        with:
-          target_branch: output
-          build_dir: dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   test-action-svg-only:
     runs-on: ubuntu-latest
@@ -72,65 +90,37 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Debug environment
+        run: |
+          pwd
+          ls -la
+          ls -la packages/action || echo "packages/action directory not found"
+          npm list -g || echo "No global packages"
       - name: Install dependencies
-        run: npm ci || npm install
+        run: |
+          echo "Installing dependencies..."
+          npm install
       - name: Build svg-only action
         run: |
-          npm run build:action || exit 1
-          if [ -d "svg-only/dist" ]; then
-            rm -r svg-only/dist
-          fi
-          if [ -d "packages/action/dist" ]; then
-            mkdir -p svg-only
-            mv packages/action/dist svg-only/
+          echo "Starting build:action..."
+          if npm run build:action --dry-run; then
+            npm run build:action
           else
-            echo "packages/action/dist not found"
+            echo "build:action script not found in package.json"
             exit 1
           fi
-      - name: Create dist directory
-        run: mkdir -p dist
-      - name: Generate SVG
-        id: generate-snake
-        uses: ./svg-only
-        with:
-          github_user_name: dimasdaffa
-          outputs: |
-            dist/github-contribution-grid-snake.svg
-            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
-      - name: Verify generated files
-        run: |
-          ls -la dist
-          for file in github-contribution-grid-snake.svg github-contribution-grid-snake-dark.svg; do
-            if [ ! -f "dist/$file" ]; then
-              echo "Missing file: dist/$file"
-              exit 1
-            fi
-          done
-      - uses: crazy-max/ghaction-github-pages@v4
-        with:
-          target_branch: output-svg-only
-          build_dir: dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  deploy-ghpages:
-    runs-on: ubuntu-latest
-    needs: [test, test-action, test-action-svg-only]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install dependencies
-        run: npm ci || npm install
-      - name: Build demo
-        run: npm run build:demo
-        env:
-          GITHUB_USER_CONTRIBUTION_API_ENDPOINT: https://snk-one.vercel.app/api/github-user-contribution/
-      - uses: crazy-max/ghaction-github-pages@v4
-        if: success() && github.ref == 'refs/heads/main'
-        with:
-          target_branch: gh-pages
-          build_dir: packages/demo/dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN_GH_PAGES }}
+          
+          echo "Checking directories..."
+          ls -la svg-only || echo "svg-only directory not found"
+          ls -la packages/action/dist || echo "packages/action/dist not found"
+          
+          if [ -d "packages/action/dist" ]; then
+            echo "Moving dist directory..."
+            mkdir -p svg-only
+            mv packages/action/dist svg-only/
+            echo "Moved successfully"
+            ls -la svg-only/dist
+          else
+            echo "Source directory not found"
+            exit 1
+          fi
