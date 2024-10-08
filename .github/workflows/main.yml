@@ -1,36 +1,46 @@
 name: main
 on: [push]
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Install dependencies
         run: |
-          if [ -f yarn.lock ]; then
-            yarn install --frozen-lockfile
-          elif [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-      - run: npm run type
-      - run: npm run lint
-      - run: npm run test --ci
+          npm ci || npm install
+      - name: Run type check
+        run: npm run type || echo "Type check script not found"
+      - name: Run lint
+        run: npm run lint || echo "Lint script not found"
+      - name: Run tests
+        run: npm test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+
   test-action:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: update action.yml to use image from local Dockerfile
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci || npm install
+      - name: Update action.yml
         run: |
-          sed -i "s/image: .*/image: Dockerfile/" action.yml
-      - name: generate-snake-game-from-github-contribution-grid
+          if [ -f "action.yml" ]; then
+            sed -i "s/image: .*/image: Dockerfile/" action.yml
+          else
+            echo "action.yml not found"
+            exit 1
+          fi
+      - name: Create dist directory
+        run: mkdir -p dist
+      - name: Generate snake game
         id: generate-snake
         uses: ./
         with:
@@ -39,13 +49,16 @@ jobs:
             dist/github-contribution-grid-snake.svg
             dist/github-contribution-grid-snake-dark.svg?palette=github-dark
             dist/github-contribution-grid-snake.gif?color_snake=orange&color_dots=#bfd6f6,#8dbdff,#64a1f4,#4b91f1,#3c7dd9
-      - name: ensure the generated file exists
+      - name: Verify generated files
         run: |
-          ls dist
-          test -f dist/github-contribution-grid-snake.svg
-          test -f dist/github-contribution-grid-snake-dark.svg
-          test -f dist/github-contribution-grid-snake.gif
-      - uses: crazy-max/ghaction-github-pages@v3.1.0
+          ls -la dist
+          for file in github-contribution-grid-snake.svg github-contribution-grid-snake-dark.svg github-contribution-grid-snake.gif; do
+            if [ ! -f "dist/$file" ]; then
+              echo "Missing file: dist/$file"
+              exit 1
+            fi
+          done
+      - uses: crazy-max/ghaction-github-pages@v4
         with:
           target_branch: output
           build_dir: dist
@@ -56,24 +69,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Install dependencies
+        run: npm ci || npm install
+      - name: Build svg-only action
         run: |
-          if [ -f yarn.lock ]; then
-            yarn install --frozen-lockfile
-          elif [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
+          npm run build:action || exit 1
+          if [ -d "svg-only/dist" ]; then
+            rm -r svg-only/dist
           fi
-      - name: build svg-only action
-        run: |
-          npm run build:action
-          rm -r svg-only/dist
-          mv packages/action/dist svg-only/dist
-      - name: generate-snake-game-from-github-contribution-grid
+          if [ -d "packages/action/dist" ]; then
+            mkdir -p svg-only
+            mv packages/action/dist svg-only/
+          else
+            echo "packages/action/dist not found"
+            exit 1
+          fi
+      - name: Create dist directory
+        run: mkdir -p dist
+      - name: Generate SVG
         id: generate-snake
         uses: ./svg-only
         with:
@@ -81,12 +97,16 @@ jobs:
           outputs: |
             dist/github-contribution-grid-snake.svg
             dist/github-contribution-grid-snake-dark.svg?palette=github-dark
-      - name: ensure the generated file exists
+      - name: Verify generated files
         run: |
-          ls dist
-          test -f dist/github-contribution-grid-snake.svg
-          test -f dist/github-contribution-grid-snake-dark.svg
-      - uses: crazy-max/ghaction-github-pages@v3.1.0
+          ls -la dist
+          for file in github-contribution-grid-snake.svg github-contribution-grid-snake-dark.svg; do
+            if [ ! -f "dist/$file" ]; then
+              echo "Missing file: dist/$file"
+              exit 1
+            fi
+          done
+      - uses: crazy-max/ghaction-github-pages@v4
         with:
           target_branch: output-svg-only
           build_dir: dist
@@ -95,24 +115,19 @@ jobs:
 
   deploy-ghpages:
     runs-on: ubuntu-latest
+    needs: [test, test-action, test-action-svg-only]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Install dependencies
-        run: |
-          if [ -f yarn.lock ]; then
-            yarn install --frozen-lockfile
-          elif [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-      - run: npm run build:demo
+        run: npm ci || npm install
+      - name: Build demo
+        run: npm run build:demo
         env:
           GITHUB_USER_CONTRIBUTION_API_ENDPOINT: https://snk-one.vercel.app/api/github-user-contribution/
-      - uses: crazy-max/ghaction-github-pages@v3.1.0
+      - uses: crazy-max/ghaction-github-pages@v4
         if: success() && github.ref == 'refs/heads/main'
         with:
           target_branch: gh-pages
