@@ -1,11 +1,13 @@
 <h1 align="center">Hi 👋, I'm Dimas Daffa</h1>
-<h3 align="center">A dedicated Web & Flutter Developer, also equipped with basic Machine Learning knowledge.</h3>
+<h3 align="center">A dedicated iOS & Web Developer, also equipped with basic Machine Learning knowledge.</h3>
 
-- 🔭 I’m currently working on **IT Support Labkom UDINUS**
+- 🔭 I’m currently preparing for **Apple Developer Academy (Cohort 2026)**
 
-- 🌱 I’m currently learning **Next JS & Laravel**
+- 💼 Previously worked as **IT Support Labkom UDINUS**
 
-- 👯 I’m looking to collaborate on **Web Project**
+- 🌱 I’m currently learning **Swift & Laravel**
+
+- ⚡ Transitioning from **Web to iOS Development**
 
 - 📫 How to reach me **linkedin.com/dimas-daffa-a6069830a**
 
