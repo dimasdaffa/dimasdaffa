@@ -1,13 +1,13 @@
 <h1 align="center">Hi 👋, I'm Dimas Daffa</h1>
 <h3 align="center">A Full-Stack Developer specializing in the Apple Ecosystem and Web Technologies. Currently a Learner at the Apple Developer Academy @ UC, Jakarta 2026. I bridge the gap between high-performance mobile apps and scalable web backends.</h3>
 
-- 🍎 iOS Development: Crafting intuitive experiences with Swift & SwiftUI.**
+- 🍎 iOS Development: Crafting intuitive experiences with Swift & SwiftUI.
 
-- 🌐 Server-Side Swift: Building robust backends using Vapor.**
+- 🌐 Server-Side Swift: Building robust backends using Vapor.
 
-- 💻 Web Stack: Proficient in Laravel and modern frontend frameworks.**
+- 💻 Web Stack: Proficient in Laravel and modern frontend frameworks.
 
-- 🤖 Machine Learning: Integrating ML models to create smarter applications.**
+- 🤖 Machine Learning: Integrating ML models to create smarter applications.
 
 - 📫 How to reach me **linkedin.com/dimas-daffa-a6069830a**
 
