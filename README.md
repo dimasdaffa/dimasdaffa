@@ -5,7 +5,7 @@
 
 - 🌐 Server-Side Swift: Building robust backends using Vapor.
 
-- 💻 Web Stack: Proficient in Laravel and modern frontend frameworks.
+- 💻 Web Stack: Proficient in Laravel and actively developing my skills in Next.js.
 
 - 🤖 Machine Learning: Integrating ML models to create smarter applications.
 
